@@ -109,8 +109,10 @@ export class JSParser implements Parser {
   }
 
   private findClasses(content: string, filePath: string, relativePath: string, entities: CodeEntity[]): void {
-    // Match class declarations
-    const classPattern = /class\s+([a-zA-Z0-9_$]+)/g;
+    // Match class declarations - be more specific to avoid false positives
+    // Look for 'class' keyword followed by a space and then a valid class name
+    // Avoid matching 'class' in other contexts like HTML class attributes or text
+    const classPattern = /(?:^|\s)class\s+([a-zA-Z][a-zA-Z0-9_$]*)(?:\s|\{|$)/gm;
     
     // Precompute line positions if not already done
     let linePositions: number[] = [];
@@ -122,16 +124,28 @@ export class JSParser implements Parser {
       }
     }
     
+    // Keep track of classes we've already found to avoid duplicates
+    const foundClasses = new Set<string>();
+    
     let match;
     // Reset the regex index
     classPattern.lastIndex = 0;
     
+    // Split content into lines for better context checking
+    const lines = content.split('\n');
+    
     while ((match = classPattern.exec(content)) !== null) {
       const className = match[1];
       
+      // Skip if we've already found this class in this file
+      const classKey = `${className}:${filePath}`;
+      if (foundClasses.has(classKey)) {
+        continue;
+      }
+      
       // Find line number (more efficient method)
       const matchPosition = match.index;
-      let lineNumber = 1; // Start at line 1
+      let lineNumber = 0; // Start at line 0 (will be adjusted to 1-based later)
       
       // Binary search to find the line number
       let low = 0;
@@ -140,7 +154,7 @@ export class JSParser implements Parser {
       while (low <= high) {
         const mid = Math.floor((low + high) / 2);
         if (linePositions[mid] <= matchPosition && (mid === linePositions.length - 1 || linePositions[mid + 1] > matchPosition)) {
-          lineNumber = mid + 1; // +1 because line numbers are 1-based
+          lineNumber = mid;
           break;
         } else if (linePositions[mid] > matchPosition) {
           high = mid - 1;
@@ -149,9 +163,23 @@ export class JSParser implements Parser {
         }
       }
       
+      // Get the line content to verify this is actually a class declaration
+      const lineContent = lines[lineNumber];
+      
+      // Skip if this doesn't look like a real class declaration
+      // For example, skip if 'class' is part of a string or comment
+      if (lineContent.trim().startsWith('//') || 
+          (lineContent.includes('"class') && !lineContent.includes('class ')) || 
+          (lineContent.includes('\'class') && !lineContent.includes('class '))) {
+        continue;
+      }
+      
+      // Add to found classes set to avoid duplicates
+      foundClasses.add(classKey);
+      
       entities.push({
         name: className,
-        line: lineNumber,
+        line: lineNumber + 1, // +1 because line numbers are 1-based
         file: path.basename(filePath),
         relativePath: relativePath,
         type: 'class'
@@ -208,15 +236,42 @@ export class PythonParser implements Parser {
     // Match class declarations: class Name:
     const classPattern = /class\s+([a-zA-Z0-9_]+)\s*(?:\(.*\))?\s*:/g;
     
-    let match;
-    const contentCopy = content.slice();
+    // Keep track of classes we've already found to avoid duplicates
+    const foundClasses = new Set<string>();
     
-    while ((match = classPattern.exec(contentCopy)) !== null) {
+    // Split content into lines for better context checking
+    const lines = content.split('\n');
+    
+    let match;
+    // Reset the regex index
+    classPattern.lastIndex = 0;
+    
+    while ((match = classPattern.exec(content)) !== null) {
       const className = match[1];
       
-      // Find line number
-      const upToMatch = contentCopy.substring(0, match.index);
+      // Skip if we've already found this class in this file
+      const classKey = `${className}:${filePath}`;
+      if (foundClasses.has(classKey)) {
+        continue;
+      }
+      
+      // Find line number more accurately
+      const upToMatch = content.substring(0, match.index);
       const lineNumber = upToMatch.split('\n').length;
+      
+      // Get the line content to verify this is actually a class declaration
+      const lineContent = lineNumber > 0 && lineNumber <= lines.length ? lines[lineNumber - 1] : '';
+      
+      // Skip if this doesn't look like a real class declaration
+      // For example, skip if 'class' is part of a string or comment
+      if (lineContent.trim().startsWith('#') || 
+          (lineContent.includes('"class') && !lineContent.includes('class ')) || 
+          (lineContent.includes('\'class') && !lineContent.includes('class '))) {
+        continue;
+      }
+      
+      // Add to found classes set to avoid duplicates
+      foundClasses.add(classKey);
       
       entities.push({
         name: className,
