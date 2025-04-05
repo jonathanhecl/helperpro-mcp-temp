@@ -1,0 +1,8 @@
+# Ejemplo de archivo .gitignore
+node_modules/
+dist/
+*.log
+.DS_Store
+coverage/
+# Ignorar archivos específicos
+ignored_file.js
