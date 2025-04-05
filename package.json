@@ -1,6 +1,6 @@
 {
   "name": "mcp-code-analyzer",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A Model Context Protocol (MCP) server for code analysis",
   "main": "dist/index.js",
   "scripts": {
@@ -13,6 +13,9 @@
   "bin": {
     "mcp-code-analyzer": "./dist/bin.js"
   },
+  "files": [
+    "dist"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/jonathanhecl/helperpro-mcp.git"
