@@ -136,6 +136,52 @@ GET /get_classes?path=/path/to/project&format=table&maxDepth=5
 - Use the `maxDepth` parameter to limit the search depth for better performance
 - The server automatically ignores common directories like `node_modules` to improve performance
 
+## Integration with MCP Clients
+
+This MCP server can be integrated with MCP clients like Cascade or other AI assistants that support the Model Context Protocol.
+
+### Using with Cascade or Similar Tools
+
+Add the following configuration to your `.cascade.json` file:
+
+```json
+{
+  "mcpServers": {
+    "code-analyzer": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-code-analyzer"
+      ]
+    }
+  }
+}
+```
+
+### Publishing and Installation
+
+To publish this package to npm:
+
+```bash
+# Login to npm (you need an npm account)
+npm login
+
+# Build the package
+npm run build
+
+# Publish the package
+npm publish
+```
+
+To install and use globally:
+
+```bash
+npm install -g mcp-code-analyzer
+
+# Run the server
+mcp-code-analyzer
+```
+
 ## License
 
 [MIT License](LICENSE)

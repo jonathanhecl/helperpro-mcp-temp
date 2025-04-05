@@ -1,21 +1,25 @@
 {
-  "name": "helperpro-mcp",
+  "name": "mcp-code-analyzer",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "A Model Context Protocol (MCP) server for code analysis",
+  "main": "dist/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc",
     "start": "node dist/index.js",
-    "dev": "ts-node src/index.ts"
+    "dev": "ts-node src/index.ts",
+    "prepublishOnly": "npm run build"
+  },
+  "bin": {
+    "mcp-code-analyzer": "./dist/bin.js"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/jonathanhecl/helperpro-mcp.git"
   },
-  "keywords": [],
+  "keywords": ["mcp", "model-context-protocol", "code-analysis", "code-analyzer", "functions", "classes"],
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "type": "commonjs",
   "bugs": {
     "url": "https://github.com/jonathanhecl/helperpro-mcp/issues"
